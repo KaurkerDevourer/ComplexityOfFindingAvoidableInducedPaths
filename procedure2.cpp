@@ -7,13 +7,13 @@
 #include <unistd.h>
 #include <mutex>
 #include <thread>
+#include <functional>
 
 using namespace std;
 
 #define ll long long
 
-int cnt1 = 0;
-int cnt2 = 0;
+const int kthreads = 8;
 
 vector<vector<int> > contract(vector<vector<int>> g, int y, int last) {
     unordered_set<int> in_y;
@@ -91,16 +91,14 @@ vector<int> extension(vector<int>& path, vector<vector<int> >& g, int last = -1)
     return ans;
 }
 
-int total_cnt = 0;
-int recursion1 = 0;
-int max_recursion1 = 0;
-int recursion2 = 0;
-int max_recursion2 = 0;
-int counter_good1 = 0;
-int counter_good2 = 0;
-int counter_bad = 0;
-int counter_best = 0;
-vector<pair<int,int> > vec;
+thread_local int total_cnt = 0;
+thread_local int counter_good1 = 0;
+thread_local int counter_good2 = 0;
+thread_local int counter_bad = 0;
+thread_local int counter_best = 0;
+thread_local int cnt1 = 0;
+thread_local int cnt2 = 0;
+thread_local vector<pair<int,int> > vec;
 
 vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
     int total_sum = 0;
@@ -144,9 +142,6 @@ vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
     if (ext.size() != 0) {
         cnt1++;
        // cout << "Recursion 1" << endl;
-        recursion2 = 0;
-        recursion1++;
-        max_recursion1 = max(max_recursion1, recursion1);
         xorik |= 1;
         vector<vector<int> > ret = procedure2(ext, g_without_p_last);
         for (const auto &x : ret) {
@@ -164,9 +159,6 @@ vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
             vector<vector<int> > G_contr = contract(g, Q.back(), p_last);
         
         //cout << "Recursion 2" << endl;
-        recursion2++;
-        recursion1 = 0;
-        max_recursion2 = max(recursion2, max_recursion2);
         xorik |= 2;
         vector<vector<int> > ret = procedure2(ext, G_contr);
         for (const auto &x : ret) {
@@ -192,7 +184,6 @@ vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
         counter_bad++;
     }
    // cout << "EXIT" << endl;
-    recursion2 = 0;
     return S;
 // 
 }
@@ -221,12 +212,14 @@ vector<pair<int,int> > get_all_pairs(vector<vector<int>>& g) {
 
 
 std::mutex print_mutex;
+std::atomic<int> maxn = 0;
+std::atomic<int> best_bad = 0;
 
-void compute(int left, int right) {
+void compute(int left, int right, vector<pair<int,int> > pairs, vector<vector<int> > g) {
     for (int i = left; i < right; i++) {
         int k = 2;
         //cin >> k;
-        p.clear();
+        vector<int> p;
         p.resize(k);
         total_cnt = 0;
         cnt1 = 0;
@@ -237,17 +230,17 @@ void compute(int left, int right) {
         //   cin >> p[i];
        // }
         vector<vector<int> > ans = procedure1(p, g);
-        if (counter_bad > best_bad) {
+        if (counter_bad > best_bad.load()) {
             print_mutex.lock();
             std::cout << "BEST : " << counter_best << std::endl;
             std::cout << "GOOD1: " << counter_good1 << std::endl;
             std::cout << "GOOD2: " << counter_good2 << std::endl;
             std::cout << "BAD : " << counter_bad << std::endl;
-            for (const auto& x : vec) {
+            /*for (const auto& x : vec) {
                 cout << x.first << ' ' << x.second << std::endl;
-            }
+            } */
             print_mutex.unlock();
-            best_bad = counter_bad;
+            best_bad.store(counter_bad);
         }
         counter_best = 0;
         counter_good1 = 0;
@@ -255,8 +248,8 @@ void compute(int left, int right) {
         counter_bad = 0;
         vec.clear();
 
-        if (total_cnt > maxn) {
-            print_mutex.lock();
+        if (total_cnt > maxn.load()) {
+           /* print_mutex.lock();
             cout << "START PATH: ";
             for (auto x : p) {
                cout << x << ' ';
@@ -271,11 +264,11 @@ void compute(int left, int right) {
                 }
                 cout << endl;
             }*/
-            cout << "RECURSION_CNT: " << total_cnt << endl;
+            /*cout << "RECURSION_CNT: " << total_cnt << endl;
             cout << "CNT1: " << cnt1 << endl;
             cout << "CNT2: " << cnt2 << endl;
-            print_mutex.unlock();
-            maxn = max(maxn, total_cnt);
+            print_mutex.unlock(); */
+            maxn.store(total_cnt);
         }
     }
 }
@@ -285,7 +278,7 @@ int main() {
     vector<int> p;
     int n = 10;
     //cin >> n;
-    if (n == 6) {
+   /* if (n == 6) {
         g.resize(6);
         g[0].push_back(1);
         g[1].push_back(0);
@@ -301,7 +294,7 @@ int main() {
         g[5].push_back(4);
         g[2].push_back(3);
         g[3].push_back(2);
-    }
+    } */
     /*
     g.resize(n); // Цикл с маленькими циклами через t
     for (int i = 0; i < n; i++) {
@@ -321,7 +314,7 @@ int main() {
         g[i].push_back((i+1)%n);
         g[(i+1)%n].push_back(i);
     }*/
-    ll amogus = (1 << n);  // cube
+    int amogus = (1 << n);  // cube
     g.resize(amogus);
     for (int i = 0; i < amogus; i++) {
         for (int j = 0; j < n; j++) {
@@ -353,76 +346,18 @@ int main() {
     for (int i = 0; i < pairs.size() i++) {
         cout << pairs[i].first << ' ' << pairs[i].second << endl;
     } */
-
-    int maxn = 0;
-    int now = 0;
-    int ten_prc = pairs.size() / 10;
-    int best_bad = 0;
     // i * 100 * now > pairs.size()
     std::vector<std::thread> workers;
-    for (int i = 0; i < 10; i++) {
-        workers.emplace_back(compute((pair.size() / 10) * i, (pair.size()/10) * (i + 1)));
+    for (int i = 0; i < kthreads; i++) {
+        std::function<void()> func = [=]() {
+            compute((pairs.size() * i / kthreads), (pairs.size() * (i + 1) / kthreads), pairs, g);
+        };
+        std::thread t(func);
+        workers.push_back(std::move(t));
     }
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < kthreads; i++) {
         workers[i].join();
     }
-    for (int i = 0; i < pairs.size(); i++) {
-        if (i >= ten_prc * now) {
-            cout << "prc: " << now * 10 << ' ' << i << ' ' << pairs.size() << endl;
-            now++;
-        }
-        int k = 2;
-        //cin >> k;
-        p.clear();
-        p.resize(k);
-        total_cnt = 0;
-        cnt1 = 0;
-        cnt2 = 0;
-        p[0] = pairs[i].first;
-        p[1] = pairs[i].second;
-        // for (int i = 0; i < k; i++) {
-        //   cin >> p[i];
-       // }
-        vector<vector<int> > ans = procedure1(p, g);
-        if (counter_bad > best_bad) {
-            std::cout << "BEST : " << counter_best << std::endl;
-            std::cout << "GOOD1: " << counter_good1 << std::endl;
-            std::cout << "GOOD2: " << counter_good2 << std::endl;
-            std::cout << "BAD : " << counter_bad << std::endl;
-            for (const auto& x : vec) {
-                cout << x.first << ' ' << x.second << std::endl;
-            }
-            best_bad = counter_bad;
-        }
-        counter_best = 0;
-        counter_good1 = 0;
-        counter_good2 = 0;
-        counter_bad = 0;
-        vec.clear();
-
-        if (total_cnt > maxn) {
-            cout << "START PATH: ";
-            for (auto x : p) {
-               cout << x << ' ';
-            }
-            cout << endl;
-            cout << "SHIFT SIZE: ";
-            cout << ans.size() << endl;
-            cout << "SHIFTS:" << endl;
-            /*for (auto& path : ans) {
-                for (auto& x : path) {
-                    cout << x << ' ';
-                }
-                cout << endl;
-            }*/
-            cout << "RECURSION_CNT: " << total_cnt << endl;
-            cout << "CNT1: " << cnt1 << endl;
-            cout << "CNT2: " << cnt2 << endl;
-            maxn = max(maxn, total_cnt);
-        }
-    }
     cout << "MAX: " << maxn << endl;
-    cout << max_recursion1 << endl;
-    cout << max_recursion2 << endl;
 }
 
