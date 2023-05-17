@@ -336,8 +336,8 @@ int main() {
         }
     } */
 
-    vector<pair<int,int> > pairs = get_all_pairs(g);
-   // vector<vector<int> > triples = get_some_cube_triples(n);
+   //vector<pair<int,int> > pairs = get_all_pairs(g);
+    vector<vector<int> > triples = get_some_cube_triples(n);
     // for https://csacademy.com/app/graph_editor/
     /* for (int i = 0; i < g.size(); i++) {
         cout << i << endl; 
@@ -349,23 +349,23 @@ int main() {
 
     int maxn = 0;
     int now = 0;
-    int ten_prc = pairs.size() / 10;
+    int ten_prc = triples.size() / 10;
     int best_bad = 0;
     // i * 100 * now > pairs.size()
-    for (int i = 0; i < pairs.size(); i++) {
+    for (int i = 0; i < triples.size(); i++) {
         if (i >= ten_prc * now) {
-            cout << "prc: " << now * 10 << ' ' << i << ' ' << pairs.size() << endl;
+            cout << "prc: " << now * 10 << ' ' << i << ' ' << triples.size() << endl;
             now++;
         }
-        int k = 2;
+        int k = 3;
         //cin >> k;
         p.clear();
         p.resize(k);
         total_cnt = 0;
         cnt1 = 0;
         cnt2 = 0;
-        p[0] = pairs[i].first;
-        p[1] = pairs[i].second;
+       // p[0] = pairs[i].first;
+        //p[1] = pairs[i].second;
         // for (int i = 0; i < k; i++) {
         //   cin >> p[i];
        // }
