@@ -191,7 +191,7 @@ vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
 vector<vector<int> > procedure1(vector<int>& path, vector<vector<int>>& g) {
     vector<int> ext = extension(path, g);
     if (ext.size() == 0) {
-        return {path};
+        return {};
     } else {
         return procedure2(ext, g);
     }
@@ -230,6 +230,7 @@ void compute(int left, int right, vector<pair<int,int> > pairs, vector<vector<in
         //   cin >> p[i];
        // }
         vector<vector<int> > ans = procedure1(p, g);
+        assert(ans.size() == 0 || counter_best == counter_bad + 1);
         if (counter_bad > best_bad.load()) {
             print_mutex.lock();
             std::cout << "BEST : " << counter_best << std::endl;
@@ -276,9 +277,9 @@ void compute(int left, int right, vector<pair<int,int> > pairs, vector<vector<in
 int main() {
     vector<vector<int> > g;
     vector<int> p;
-    int n = 10;
+    int n = 6;
     //cin >> n;
-   /* if (n == 6) {
+    /*if (n == 6) {
         g.resize(6);
         g[0].push_back(1);
         g[1].push_back(0);
@@ -295,8 +296,8 @@ int main() {
         g[2].push_back(3);
         g[3].push_back(2);
     } */
-    /*
-    g.resize(n); // Цикл с маленькими циклами через t
+    
+    /*g.resize(n); // Цикл с маленькими циклами через t
     for (int i = 0; i < n; i++) {
         g[i].push_back((i+1)%n);
         g[(i+1)%n].push_back(i);
@@ -307,13 +308,13 @@ int main() {
         g[i].push_back((i+t)%n);
         g[(i+t)%n].push_back(i);
     }*/
-    /*g.resize(n); simple cicle
+    /*g.resize(n); //simple cicle
     p.push_back(1);
     p.push_back(0);
     for (int i = 0; i < n; i++) {
         g[i].push_back((i+1)%n);
         g[(i+1)%n].push_back(i);
-    }*/
+    } */
     int amogus = (1 << n);  // cube
     g.resize(amogus);
     for (int i = 0; i < amogus; i++) {

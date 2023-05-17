@@ -5,6 +5,8 @@
 #include <vector>
 #include <unordered_set>
 #include <unistd.h>
+#include <map>
+#include <set>
 
 using namespace std;
 
@@ -135,8 +137,10 @@ int counter_good2 = 0;
 int counter_bad = 0;
 int counter_best = 0;
 vector<pair<int,int> > vec;
+map<pair<int,int>, int> was_there;
 
 vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
+    //was_there[{path[0], path[1]}]++;
     int total_sum = 0;
     for (auto v : g) {
         total_sum += v.size();
@@ -207,13 +211,14 @@ vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
         }
     }
     if (xorik == 0) {
+        //was_there[{path[0], path[1]}]--;
         counter_best++;
     } else if (xorik == 1) {
         counter_good1++;
     } else if (xorik == 2) {
         counter_good2++;
     } else {
-        std::cout << "RECURSION C: " << recursion2 << std::endl;
+       // std::cout << "RECURSION C: " << recursion2 << std::endl;
         int sum = 0;
         int tot = g.size();
         for (auto x : g) {
@@ -225,6 +230,7 @@ vector<vector<int> > procedure2(vector<int>& path, vector<vector<int> > &g) {
         vec.emplace_back(tot, sum / 2);
         counter_bad++;
     }
+
     return S;
 // 
 }
@@ -251,10 +257,25 @@ vector<pair<int,int> > get_all_pairs(vector<vector<int>>& g) {
     return pairs;
 }
 
+vector<vector<int> > get_some_cube_triples(int n) {
+    vector<vector<int> > triples;
+    ll len = (1ll << n);
+    for (int i = 0; i < len; i++) {
+        vector<int> triple;
+        triple.push_back(i);
+        triple.push_back(i ^ 1);
+        triple.push_back(i ^ 8);
+        triple.push_back(i ^ 4);
+        triples.push_back(triple);
+    }
+
+    return triples;
+}
+
 int main() {
     vector<vector<int> > g;
     vector<int> p;
-    int n = 10;
+    int n = 8;
     //cin >> n;
     /*if (n == 6) {
         g.resize(6);
@@ -272,7 +293,7 @@ int main() {
         g[5].push_back(4);
         g[2].push_back(3);
         g[3].push_back(2);
-    } */
+    }*/
     /*
     g.resize(n); // Цикл с маленькими циклами через t
     for (int i = 0; i < n; i++) {
@@ -292,15 +313,15 @@ int main() {
         g[i].push_back((i+1)%n);
         g[(i+1)%n].push_back(i);
     }*/
-    /*ll amogus = (1 << n);  // cube
+    ll amogus = (1ll << n);  // cube
     g.resize(amogus);
     for (int i = 0; i < amogus; i++) {
         for (int j = 0; j < n; j++) {
             g[i].push_back(i^(1 << j));
         }
-    }; */
+    }; 
     //cout << "GRAPH SIZE: " << n * n << endl;
-    g.resize(n * n);
+   /* g.resize(n * n);
     for (int j = 0; j < n; j++) {
         for (int i = 0; i < n - 1; i++) {
             g[j * n + i].push_back(j * n + i + 1); // сетка P_k * P_k
@@ -313,9 +334,10 @@ int main() {
             g[j * n + i].push_back((j + 1) * n + i); // сетка P_k * P_k
             g[(j + 1) * n + i].push_back(j * n + i); // по вертикали заполняем
         }
-    }
+    } */
 
     vector<pair<int,int> > pairs = get_all_pairs(g);
+   // vector<vector<int> > triples = get_some_cube_triples(n);
     // for https://csacademy.com/app/graph_editor/
     /* for (int i = 0; i < g.size(); i++) {
         cout << i << endl; 
@@ -349,13 +371,13 @@ int main() {
        // }
         vector<vector<int> > ans = procedure1(p, g);
         if (counter_bad > best_bad) {
-            std::cout << "BEST : " << counter_best << std::endl;
-            std::cout << "GOOD1: " << counter_good1 << std::endl;
-            std::cout << "GOOD2: " << counter_good2 << std::endl;
-            std::cout << "BAD : " << counter_bad << std::endl;
-            for (const auto& x : vec) {
-                cout << x.first << ' ' << x.second << std::endl;
-            }
+            //std::cout << "BEST : " << counter_best << std::endl;
+            //std::cout << "GOOD1: " << counter_good1 << std::endl;
+            //std::cout << "GOOD2: " << counter_good2 << std::endl;
+            //std::cout << "BAD : " << counter_bad << std::endl;
+           // for (const auto& x : vec) {
+           //     cout << x.first << ' ' << x.second << std::endl;
+           // }
             best_bad = counter_bad;
         }
         counter_best = 0;
@@ -365,25 +387,26 @@ int main() {
         vec.clear();
 
         if (total_cnt > maxn) {
-            cout << "START PATH: ";
-            for (auto x : p) {
-               cout << x << ' ';
-            }
-            cout << endl;
-            cout << "SHIFT SIZE: ";
-            cout << ans.size() << endl;
-            cout << "SHIFTS:" << endl;
+        //    cout << "START PATH: ";
+         //   for (auto x : p) {
+         //      cout << x << ' ';
+         //   }
+            // cout << endl;
+            // cout << "SHIFT SIZE: ";
+            // cout << ans.size() << endl;
+            // cout << "SHIFTS:" << endl;
             /*for (auto& path : ans) {
                 for (auto& x : path) {
                     cout << x << ' ';
                 }
                 cout << endl;
             }*/
-            cout << "RECURSION_CNT: " << total_cnt << endl;
-            cout << "CNT1: " << cnt1 << endl;
-            cout << "CNT2: " << cnt2 << endl;
+            // cout << "RECURSION_CNT: " << total_cnt << endl;
+            // cout << "CNT1: " << cnt1 << endl;
+            // cout << "CNT2: " << cnt2 << endl;
             maxn = max(maxn, total_cnt);
         }
+       // break;
     }
     cout << "MAX: " << maxn << endl;
     cout << max_recursion1 << endl;
